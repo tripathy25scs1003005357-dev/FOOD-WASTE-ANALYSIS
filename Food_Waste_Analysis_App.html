@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Food Waste Analysis — Vaibhav Tripathy</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --green-dark: #2d5a1b;
+    --green-mid: #4a8a2c;
+    --green-bright: #6ab04c;
+    --green-light: #a8d87a;
+    --green-pale: #e8f5dc;
+    --amber: #e8a020;
+    --amber-light: #fdf0d0;
+    --coral: #d85a30;
+    --coral-light: #fceee8;
+    --teal: #1d9e75;
+    --teal-light: #e0f7ef;
+    --blue: #2f7ec1;
+    --blue-light: #e6f2fb;
+    --text-primary: #1a2410;
+    --text-secondary: #4a5e38;
+    --text-muted: #7a8f6a;
+    --bg: #f7f9f4;
+    --bg-card: #ffffff;
+    --bg-surface: #f0f4eb;
+    --border: #d8e5cc;
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+  }
+
+  /* HERO HEADER */
+  .hero {
+    background: var(--green-dark);
+    padding: 48px 40px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 300px; height: 300px;
+    background: rgba(106,176,76,0.15);
+    border-radius: 50%;
+  }
+  .hero::after {
+    content: '';
+    position: absolute;
+    bottom: -40px; left: 30%;
+    width: 200px; height: 200px;
+    background: rgba(168,216,122,0.1);
+    border-radius: 50%;
+  }
+  .hero-tag {
+    display: inline-block;
+    background: rgba(106,176,76,0.25);
+    color: var(--green-light);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 5px 14px;
+    border-radius: 20px;
+    margin-bottom: 16px;
+    border: 1px solid rgba(168,216,122,0.3);
+  }
+  .hero h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 42px;
+    color: #ffffff;
+    line-height: 1.1;
+    margin-bottom: 10px;
+    position: relative;
+    z-index: 1;
+  }
+  .hero h1 span { color: var(--green-light); }
+  .hero-sub {
+    color: rgba(255,255,255,0.65);
+    font-size: 14px;
+    font-weight: 300;
+    position: relative;
+    z-index: 1;
+  }
+  .hero-meta {
+    display: flex;
+    gap: 24px;
+    margin-top: 28px;
+    position: relative;
+    z-index: 1;
+  }
+  .hero-meta-item {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: var(--radius-sm);
+    padding: 10px 18px;
+    text-align: center;
+  }
+  .hero-meta-item .val {
+    font-size: 22px;
+    font-weight: 600;
+    color: #fff;
+    display: block;
+  }
+  .hero-meta-item .lbl {
+    font-size: 11px;
+    color: rgba(255,255,255,0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-top: 2px;
+    display: block;
+  }
+
+  /* MAIN LAYOUT */
+  .main { padding: 32px 40px 60px; max-width: 1200px; margin: 0 auto; }
+
+  /* SECTION */
+  .section { margin-bottom: 36px; }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .section-icon {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .section-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .section-divider {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* KPI CARDS */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 14px;
+    margin-bottom: 32px;
+  }
+  .kpi-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 16px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  }
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: var(--radius) var(--radius) 0 0;
+  }
+  .kpi-card.g::before { background: var(--green-bright); }
+  .kpi-card.a::before { background: var(--amber); }
+  .kpi-card.c::before { background: var(--coral); }
+  .kpi-card.t::before { background: var(--teal); }
+  .kpi-card.b::before { background: var(--blue); }
+  .kpi-icon { font-size: 22px; margin-bottom: 10px; }
+  .kpi-val { font-size: 28px; font-weight: 700; color: var(--text-primary); line-height: 1; }
+  .kpi-label { font-size: 12px; color: var(--text-muted); margin-top: 5px; font-weight: 500; }
+
+  /* CHART GRID */
+  .chart-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+  .chart-grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 18px;
+  }
+  .chart-full { width: 100%; }
+
+  /* CHART CARDS */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px 20px 18px;
+    transition: box-shadow 0.2s;
+  }
+  .card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.07); }
+  .card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .card-title .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .chart-wrap { position: relative; width: 100%; }
+
+  /* LEGEND */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    margin-top: 14px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .legend-sq {
+    width: 9px; height: 9px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  /* HORIZONTAL BAR (custom) */
+  .hbar-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .hbar-row:last-child { margin-bottom: 0; }
+  .hbar-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    width: 140px;
+    flex-shrink: 0;
+    text-align: right;
+    font-weight: 500;
+  }
+  .hbar-track {
+    flex: 1;
+    background: var(--bg-surface);
+    border-radius: 6px;
+    height: 28px;
+    overflow: hidden;
+  }
+  .hbar-fill {
+    height: 100%;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 10px;
+    transition: width 1s ease;
+  }
+  .hbar-num {
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+  }
+  .hbar-num.dark { color: var(--text-primary); }
+
+  /* INSIGHT BOX */
+  .insight {
+    background: linear-gradient(135deg, var(--green-pale) 0%, var(--amber-light) 100%);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--green-bright);
+    border-radius: var(--radius);
+    padding: 20px 22px;
+    margin-top: 8px;
+  }
+  .insight-head {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--green-dark);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .insight p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+  }
+  .insight strong { color: var(--green-dark); font-weight: 600; }
+
+  /* FOOTER */
+  .footer {
+    background: var(--green-dark);
+    color: rgba(255,255,255,0.5);
+    text-align: center;
+    padding: 20px;
+    font-size: 12px;
+    letter-spacing: 0.3px;
+  }
+  .footer strong { color: rgba(255,255,255,0.85); }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .card, .kpi-card, .insight {
+    animation: fadeUp 0.5s ease both;
+  }
+
+  @media (max-width: 900px) {
+    .kpi-grid { grid-template-columns: repeat(3, 1fr); }
+    .chart-grid-2 { grid-template-columns: 1fr; }
+    .chart-grid-3 { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 28px; }
+    .main { padding: 20px 18px 40px; }
+    .hero { padding: 32px 18px 28px; }
+    .hero-meta { flex-wrap: wrap; gap: 10px; }
+  }
+  @media (max-width: 560px) {
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .hbar-label { width: 100px; font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-tag">Survey Analysis · 2026</div>
+  <h1>Food <span>Waste</span><br>Analysis</h1>
+  <p class="hero-sub">A comprehensive study of food wastage patterns and behaviours</p>
+  <div class="hero-meta">
+    <div class="hero-meta-item">
+      <span class="val">100</span>
+      <span class="lbl">Respondents</span>
+    </div>
+    <div class="hero-meta-item">
+      <span class="val">12</span>
+      <span class="lbl">Questions</span>
+    </div>
+    <div class="hero-meta-item">
+      <span class="val">Feb 2026</span>
+      <span class="lbl">Conducted</span>
+    </div>
+    <div class="hero-meta-item">
+      <span class="val">Vaibhav Tripathy</span>
+      <span class="lbl">Researcher</span>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- KPI CARDS -->
+  <div class="kpi-grid">
+    <div class="kpi-card g">
+      <div class="kpi-icon">👥</div>
+      <div class="kpi-val">100</div>
+      <div class="kpi-label">Total Respondents</div>
+    </div>
+    <div class="kpi-card a">
+      <div class="kpi-icon">⚠️</div>
+      <div class="kpi-val">32%</div>
+      <div class="kpi-label">Waste Often / Always</div>
+    </div>
+    <div class="kpi-card t">
+      <div class="kpi-icon">✅</div>
+      <div class="kpi-val">38%</div>
+      <div class="kpi-label">Always Try to Reduce</div>
+    </div>
+    <div class="kpi-card c">
+      <div class="kpi-icon">🍲</div>
+      <div class="kpi-val">33%</div>
+      <div class="kpi-label">Waste Cooked Food Most</div>
+    </div>
+    <div class="kpi-card b">
+      <div class="kpi-icon">🏷️</div>
+      <div class="kpi-val">37%</div>
+      <div class="kpi-label">Always Check Expiry</div>
+    </div>
+  </div>
+
+  <!-- DEMOGRAPHICS -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon" style="background:#e8f5dc;">👤</div>
+      <div class="section-title">Demographics</div>
+      <div class="section-divider"></div>
+    </div>
+    <div class="chart-grid-2">
+      <div class="card">
+        <div class="card-title"><span class="dot" style="background:#6ab04c"></span>Age Group Distribution</div>
+        <div class="chart-wrap" style="height:240px">
+          <canvas id="ageChart" role="img" aria-label="Pie chart: 18-22 age group leads at 28%">Age groups: 18-22 (28%), Under 18 (25%), Above 45 (23%), 23-30 (14%), 31-45 (10%)</canvas>
+        </div>
+        <div class="legend">
+          <span class="legend-item"><span class="legend-sq" style="background:#6ab04c"></span>18–22 (28%)</span>
+          <span class="legend-item"><span class="legend-sq" style="background:#a8d87a"></span>Under 18 (25%)</span>
+          <span class="legend-item"><span class="legend-sq" style="background:#e8a020"></span>Above 45 (23%)</span>
+          <span class="legend-item"><span class="legend-sq" style="background:#f5c84a"></span>23–30 (14%)</span>
+          <span class="legend-item"><span class="legend-sq" style="background:#d8ecc0"></span>31–45 (10%)</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot" style="background:#2f7ec1"></span>Occupation Breakdown</div>
+        <div class="chart-wrap" style="height:240px">
+          <canvas id="occChart" role="img" aria-label="Bar chart: Students lead at 32">Occupation: Student (32), Working professional (26), Business (16), Homemaker (13), Other (13)</canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOUSEHOLD & FOOD SOURCE -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon" style="background:#e0f7ef;">🏠</div>
+      <div class="section-title">Household & Food Sourcing</div>
+      <div class="section-divider"></div>
+    </div>
+    <div class="chart-grid-2">
+      <div class="card">
+        <div class="card-title"><span class="dot" style="background:#2f7ec1"></span>Household Size</div>
+        <div class="chart-wrap" style="height:220px">
+          <canvas id="hhChart" role="img" aria-label="Doughnut: 4-5 person households most common at 37%">4-5 people: 37%, 2-3: 23%, 1: 22%, More than 5: 18%</canvas>
+        </div>
+        <div class="legend">
+          <span class="legend-item"><span class="legend-sq" style="background:#2f7ec1"></span>4–5 members (37%)</span>
+          <span class="legend-item"><span class="legend-sq" style="background:#72b8eb"></span>2–3 members (23%)</span>
+          <span class="legend-item"><span class="legend-sq" style="background:#b5d8f7"></span>1 person (22%)</span>
+          <span class="legend-item"><span class="legend-sq" style="background:#185fa0"></span>More than 5 (18%)</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot" style="background:#1d9e75"></span>Primary Food Source</div>
+        <div class="chart-wrap" style="height:220px">
+          <canvas id="srcChart" role="img" aria-label="Doughnut: Combination leads at 25%">Combination: 25%, Home cooked: 24%, Mess/Cafeteria: 21%, Restaurant: 17%, Online delivery: 13%</canvas>
+        </div>
+        <div class="legend">
+          <span class="legend-item"><span class="legend-sq" style="background:#1d9e75"></span>Combination (25%)</span>
+          <span class="legend-item"><span class="legend-sq" style="background:#5dcaa5"></span>Home cooked (24%)</span>
+          <span class="legend-item"><span class="legend-sq" style="background:#d85a30"></span>Mess/Cafeteria (21%)</span>
+          <span class="legend-item"><span class="legend-sq" style="background:#f09575"></span>Restaurant (17%)</span>
+          <span class="legend-item"><span class="legend-sq" style="background:#f5c4b3"></span>Online delivery (13%)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WASTE PATTERNS -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon" style="background:#fceee8;">🗑️</div>
+      <div class="section-title">Waste Patterns</div>
+      <div class="section-divider"></div>
+    </div>
+    <div class="chart-grid-2">
+      <div class="card">
+        <div class="card-title"><span class="dot" style="background:#e8a020"></span>How Often Do You Waste Food?</div>
+        <div class="chart-wrap" style="height:250px">
+          <canvas id="wfChart" role="img" aria-label="Bar chart of waste frequency">Rarely: 27, Sometimes: 23, Always: 19, Never: 18, Often: 13</canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot" style="background:#d85a30"></span>Daily Waste Amount</div>
+        <div class="chart-wrap" style="height:250px">
+          <canvas id="wamtChart" role="img" aria-label="Bar chart of daily waste amount">Less than 10%: 36, None: 21, More than 50%: 18, 10-25%: 13, 25-50%: 12</canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WHAT & WHY -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon" style="background:#fdf0d0;">🍽️</div>
+      <div class="section-title">What Gets Wasted & Why</div>
+      <div class="section-divider"></div>
+    </div>
+    <div class="chart-grid-2">
+      <div class="card">
+        <div class="card-title"><span class="dot" style="background:#6ab04c"></span>Type of Food Wasted Most</div>
+        <div style="margin-top:4px">
+          <div class="hbar-row">
+            <div class="hbar-label">Cooked food</div>
+            <div class="hbar-track"><div class="hbar-fill" style="width:66%;background:#4a8a2c"><span class="hbar-num">33</span></div></div>
+          </div>
+          <div class="hbar-row">
+            <div class="hbar-label">Packaged food</div>
+            <div class="hbar-track"><div class="hbar-fill" style="width:44%;background:#6ab04c"><span class="hbar-num">22</span></div></div>
+          </div>
+          <div class="hbar-row">
+            <div class="hbar-label">Fruits & vegetables</div>
+            <div class="hbar-track"><div class="hbar-fill" style="width:34%;background:#a8d87a"><span class="hbar-num dark">17</span></div></div>
+          </div>
+          <div class="hbar-row">
+            <div class="hbar-label">Fast food</div>
+            <div class="hbar-track"><div class="hbar-fill" style="width:30%;background:#e8a020"><span class="hbar-num">15</span></div></div>
+          </div>
+          <div class="hbar-row">
+            <div class="hbar-label">Dairy products</div>
+            <div class="hbar-track"><div class="hbar-fill" style="width:26%;background:#f5c84a"><span class="hbar-num dark">13</span></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot" style="background:#d85a30"></span>Main Reason for Food Waste</div>
+        <div style="margin-top:4px">
+          <div class="hbar-row">
+            <div class="hbar-label">Cooked too much</div>
+            <div class="hbar-track"><div class="hbar-fill" style="width:50%;background:#d85a30"><span class="hbar-num">25</span></div></div>
+          </div>
+          <div class="hbar-row">
+            <div class="hbar-label">Food expired</div>
+            <div class="hbar-track"><div class="hbar-fill" style="width:44%;background:#e8853a"><span class="hbar-num">22</span></div></div>
+          </div>
+          <div class="hbar-row">
+            <div class="hbar-label">Ordered extra</div>
+            <div class="hbar-track"><div class="hbar-fill" style="width:42%;background:#f0a070"><span class="hbar-num">21</span></div></div>
+          </div>
+          <div class="hbar-row">
+            <div class="hbar-label">Didn't like taste</div>
+            <div class="hbar-track"><div class="hbar-fill" style="width:34%;background:#f5c4b3"><span class="hbar-num dark">17</span></div></div>
+          </div>
+          <div class="hbar-row">
+            <div class="hbar-label">Forgot in fridge</div>
+            <div class="hbar-track"><div class="hbar-fill" style="width:30%;background:#8a9080"><span class="hbar-num">15</span></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BEHAVIOUR -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon" style="background:#e0f7ef;">♻️</div>
+      <div class="section-title">Behaviour & Awareness</div>
+      <div class="section-divider"></div>
+    </div>
+    <div class="chart-grid-3">
+      <div class="card">
+        <div class="card-title"><span class="dot" style="background:#1d9e75"></span>Effort to Reduce Waste</div>
+        <div class="chart-wrap" style="height:200px">
+          <canvas id="reduceChart" role="img" aria-label="Pie chart showing 38% always try to reduce waste">Always: 38%, Sometimes: 27%, Rarely: 19%, Never: 16%</canvas>
+        </div>
+        <div class="legend">
+          <span class="legend-item"><span class="legend-sq" style="background:#1d9e75"></span>Always (38%)</span>
+          <span class="legend-item"><span class="legend-sq" style="background:#5dcaa5"></span>Sometimes (27%)</span>
+          <span class="legend-item"><span class="legend-sq" style="background:#f09575"></span>Rarely (19%)</span>
+          <span class="legend-item"><span class="legend-sq" style="background:#d85a30"></span>Never (16%)</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot" style="background:#6ab04c"></span>Checks Expiry Date</div>
+        <div class="chart-wrap" style="height:200px">
+          <canvas id="expChart" role="img" aria-label="Doughnut: 37% always check expiry date">Always: 37%, Sometimes: 25%, Never: 21%, Rarely: 17%</canvas>
+        </div>
+        <div class="legend">
+          <span class="legend-item"><span class="legend-sq" style="background:#4a8a2c"></span>Always (37%)</span>
+          <span class="legend-item"><span class="legend-sq" style="background:#6ab04c"></span>Sometimes (25%)</span>
+          <span class="legend-item"><span class="legend-sq" style="background:#d85a30"></span>Never (21%)</span>
+          <span class="legend-item"><span class="legend-sq" style="background:#f09575"></span>Rarely (17%)</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot" style="background:#2f7ec1"></span>Leftover Food Handling</div>
+        <div class="chart-wrap" style="height:200px">
+          <canvas id="leftChart" role="img" aria-label="Horizontal bar: Throw away leads at 25, Eat later at 24">Throw away: 25, Eat later: 24, Give to others: 21, Other: 16, Refrigerate: 14</canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOD BUYING FREQUENCY -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon" style="background:#e6f2fb;">🛒</div>
+      <div class="section-title">Food Buying Frequency</div>
+      <div class="section-divider"></div>
+    </div>
+    <div class="card chart-full">
+      <div class="card-title"><span class="dot" style="background:#2f7ec1"></span>How Often Do You Buy Food?</div>
+      <div class="chart-wrap" style="height:220px">
+        <canvas id="buyChart" role="img" aria-label="Bar chart of food buying frequency">Daily: 31, 2-3 times/week: 30, Weekly: 22, Occasionally: 17</canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- KEY INSIGHT -->
+  <div class="insight">
+    <div class="insight-head">📊 Key Findings Summary</div>
+    <p>
+      The survey reveals that the dominant age group is <strong>18–22 (28%)</strong>, primarily <strong>students (32%)</strong> living in <strong>4–5 person households</strong>.
+      Most respondents waste food <strong>rarely or sometimes</strong>, with <strong>cooked food</strong> being the #1 type wasted (33%) and
+      <strong>cooking too much</strong> as the top reason (25%). Encouragingly, <strong>38%</strong> always try to reduce waste,
+      and <strong>37%</strong> always check expiry dates before buying. Only 25 respondents throw away leftovers —
+      most prefer to eat later (24) or give to others (21), showing a positive waste-reduction mindset.
+      Community awareness campaigns, better portion planning, and improved storage practices are the most suggested solutions.
+    </p>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <strong>Food Waste Analysis</strong> &nbsp;·&nbsp; Vaibhav Tripathy &nbsp;·&nbsp; Survey Conducted February 2026 &nbsp;·&nbsp; n = 100 respondents
+</div>
+
+<script>
+Chart.defaults.font.family = "'DM Sans', sans-serif";
+Chart.defaults.color = '#7a8f6a';
+
+const noLegend = { plugins: { legend: { display: false } } };
+const gridStyle = { color: 'rgba(0,0,0,0.06)', drawBorder: false };
+
+// Age Pie
+new Chart(document.getElementById('ageChart'), {
+  type: 'pie',
+  data: {
+    labels: ['18–22','Under 18','Above 45','23–30','31–45'],
+    datasets: [{
+      data: [28,25,23,14,10],
+      backgroundColor: ['#6ab04c','#a8d87a','#e8a020','#f5c84a','#d8ecc0'],
+      borderWidth: 2,
+      borderColor: '#fff'
+    }]
+  },
+  options: { responsive: true, maintainAspectRatio: false, ...noLegend }
+});
+
+// Occupation Bar
+new Chart(document.getElementById('occChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Student','Working\nProfessional','Business','Homemaker','Other'],
+    datasets: [{
+      data: [32,26,16,13,13],
+      backgroundColor: ['#2f7ec1','#5aa0d8','#85b8ea','#b5d4f7','#d8e8f8'],
+      borderRadius: 6,
+      borderSkipped: false
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, ...noLegend,
+    scales: {
+      x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+      y: { grid: gridStyle, ticks: { font: { size: 11 } } }
+    }
+  }
+});
+
+// Household Doughnut
+new Chart(document.getElementById('hhChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['4–5 members','2–3 members','1 person','More than 5'],
+    datasets: [{
+      data: [37,23,22,18],
+      backgroundColor: ['#2f7ec1','#72b8eb','#b5d8f7','#185fa0'],
+      borderWidth: 2,
+      borderColor: '#fff'
+    }]
+  },
+  options: { responsive: true, maintainAspectRatio: false, cutout: '62%', ...noLegend }
+});
+
+// Source Doughnut
+new Chart(document.getElementById('srcChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Combination','Home cooked','Mess/Cafeteria','Restaurant','Online delivery'],
+    datasets: [{
+      data: [25,24,21,17,13],
+      backgroundColor: ['#1d9e75','#5dcaa5','#d85a30','#f09575','#f5c4b3'],
+      borderWidth: 2,
+      borderColor: '#fff'
+    }]
+  },
+  options: { responsive: true, maintainAspectRatio: false, cutout: '62%', ...noLegend }
+});
+
+// Waste Frequency Bar
+new Chart(document.getElementById('wfChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Rarely','Sometimes','Always','Never','Often'],
+    datasets: [{
+      data: [27,23,19,18,13],
+      backgroundColor: ['#6ab04c','#e8a020','#d85a30','#1d9e75','#f09575'],
+      borderRadius: 6,
+      borderSkipped: false
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, ...noLegend,
+    scales: {
+      x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+      y: { grid: gridStyle, ticks: { font: { size: 11 } } }
+    }
+  }
+});
+
+// Waste Amount Bar
+new Chart(document.getElementById('wamtChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Less than 10%','None','More than 50%','10–25%','25–50%'],
+    datasets: [{
+      data: [36,21,18,13,12],
+      backgroundColor: ['#6ab04c','#1d9e75','#d85a30','#a8d87a','#f09575'],
+      borderRadius: 6,
+      borderSkipped: false
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, ...noLegend,
+    scales: {
+      x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+      y: { grid: gridStyle, ticks: { font: { size: 11 } } }
+    }
+  }
+});
+
+// Reduce Effort Pie
+new Chart(document.getElementById('reduceChart'), {
+  type: 'pie',
+  data: {
+    labels: ['Always','Sometimes','Rarely','Never'],
+    datasets: [{
+      data: [38,27,19,16],
+      backgroundColor: ['#1d9e75','#5dcaa5','#f09575','#d85a30'],
+      borderWidth: 2,
+      borderColor: '#fff'
+    }]
+  },
+  options: { responsive: true, maintainAspectRatio: false, ...noLegend }
+});
+
+// Expiry Doughnut
+new Chart(document.getElementById('expChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Always','Sometimes','Never','Rarely'],
+    datasets: [{
+      data: [37,25,21,17],
+      backgroundColor: ['#4a8a2c','#6ab04c','#d85a30','#f09575'],
+      borderWidth: 2,
+      borderColor: '#fff'
+    }]
+  },
+  options: { responsive: true, maintainAspectRatio: false, cutout: '62%', ...noLegend }
+});
+
+// Leftover Horizontal Bar
+new Chart(document.getElementById('leftChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Throw away','Eat later','Give to others','Other','Refrigerate'],
+    datasets: [{
+      data: [25,24,21,16,14],
+      backgroundColor: ['#d85a30','#6ab04c','#1d9e75','#e8a020','#2f7ec1'],
+      borderRadius: 5,
+      borderSkipped: false
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, indexAxis: 'y', ...noLegend,
+    scales: {
+      x: { grid: gridStyle, ticks: { font: { size: 11 } } },
+      y: { grid: { display: false }, ticks: { font: { size: 11 } } }
+    }
+  }
+});
+
+// Buy Frequency Bar
+new Chart(document.getElementById('buyChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Daily','2–3 times a week','Weekly','Occasionally'],
+    datasets: [{
+      data: [31,30,22,17],
+      backgroundColor: ['#2f7ec1','#5aa0d8','#85b8ea','#b5d4f7'],
+      borderRadius: 6,
+      borderSkipped: false
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, ...noLegend,
+    scales: {
+      x: { grid: { display: false }, ticks: { font: { size: 13 } } },
+      y: { grid: gridStyle, ticks: { font: { size: 11 } } }
+    }
+  }
+});
+</script>
+</body>
+</html>
